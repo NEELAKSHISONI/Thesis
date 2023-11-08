@@ -1,0 +1,227 @@
+import os
+import sys
+from functools import wraps
+
+from flask import Flask, request, abort
+
+from general import log, getEnvVar, isDocker, niceJson, allLinks
+from db_controller import db_create, db_migrate, dbCtrl
+
+
+# Use the name of the current directory as a service type
+serviceType = os.path.basename(os.getcwd())
+logger = log(serviceType).logger
+
+# Setup MiSSFire
+if getEnvVar('TOKEN', False):
+    try:
+        from MiSSFire import jwt_conditional, Requests
+        requests = Requests()
+    except ImportError:
+        logger.error("Module MiSSFire is required. Terminating.")
+        exit()
+else:
+    from general import Requests
+    requests = Requests()
+    def jwt_conditional(reqs):
+        def real_decorator(f):
+            return f
+        return real_decorator
+
+
+# Setup Flask
+# FLASK_DEBUG = getEnvVar('FLASK_DEBUG', False)
+# FLASK_HOST = '0.0.0.0'
+if isDocker():
+    FLASK_PORT = 80
+else:
+    FLASK_PORT = 9082
+
+app = Flask(__name__)
+
+
+
+
+DEFAULT_BALANCE = 1000
+
+# Load DB controller
+db = dbCtrl(logger)
+
+def prepareDB():
+    """Insure presence of the required DB files."""
+    res = False
+    if db_create.isDBVolume():
+        if not db_create.isDBfile():
+            db_create.main()
+            db_migrate.main()
+        res = True
+    return res
+    
+if not prepareDB():
+    logger.error("Missing volume. Terminating.")
+    sys.exit(1)
+
+
+
+@app.route("/", methods=['GET'])
+def hello():
+    return niceJson({"subresource_uris": allLinks(app)}, 200)
+
+
+@app.route("/accounts", methods=['GET'])
+@jwt_conditional(requests)
+def accountsGet():
+    userID = request.args.get('userID')
+    if userID:
+        res = db.getAccountsByUserId(userID, json=True)
+    else:
+        res = db.getAllAccounts()    
+    if res:
+        res_code = 200
+    else:
+        res = {}
+        res_code = 400
+    return niceJson(res, res_code)
+
+
+@app.route("/accounts", methods=['POST'])
+@jwt_conditional(requests)
+def accountsPost():
+    if not request.json or not 'userID' in request.json:
+        abort(400)
+    res = {}
+    res_code = 400
+    try:
+        userID = int(request.json['userID'])
+        accNum = db.createAccountForUserId(userID, DEFAULT_BALANCE)
+        if accNum != 1:
+            res = {'accNum': accNum}
+            res_code = 200
+    except ValueError:
+        msg="UserID expected integer, received: %s"%request.json['userID']
+        logger.warning(msg)
+        res = {'msg': msg}
+    logger.info("niceJson(res): %s, %s" % (niceJson(res,res_code), res))
+    return niceJson(res, res_code)
+
+"""
+@app.route("/accounts/<int:user_id>", methods=['GET'])
+@jwt_conditional(requests)
+def get_account_balance(user_id):
+    account = UserAccount.query.filter_by(user_id=user_id).first()
+    if account:
+        return jsonify({'balance': account.balance}), 200
+    else:
+        return jsonify({'message': 'Account not found'}), 404
+
+@app.route("/accounts/<int:user_id>/add_balance", methods=['POST'])
+@jwt_conditional(requests)
+def add_balance(user_id):
+    data = request.json
+    amount = data.get('amount', 0.0)
+    account = UserAccount.query.filter_by(user_id=user_id).first()
+    if account and amount > 0:
+        account.balance += amount
+        db.session.commit()
+        return jsonify({'message': 'Balance added successfully'}), 200
+    else:
+        return jsonify({'message': 'Invalid user ID or amount'}), 400
+"""
+    
+@app.route("/accounts/<accNum>", methods=['POST'])
+#update the balance 
+@jwt_conditional(requests)
+def accountsAccNumPost(accNum):
+    if not request.json or not 'amount' in request.json:
+        abort(400)
+    res = {}
+    res_code = 400
+    try:
+        accNum = int(accNum)
+        amount = int(request.json['amount'])
+        new_balance = db.updateAccount(accNum, amount)
+        if new_balance:
+            res = {'balance':new_balance}
+            res_code = 200
+    except ValueError:
+        msg = "Expected integers: accNum=%s, amount=%s" \
+              % (request.json['accNum'], request.json['amount'])
+        logger.warning(msg)
+        res = {'msg': msg}
+    return niceJson(res, res_code)
+
+# All APIs provided by this application, automatically generated
+LOCAL_APIS = allLinks(app)
+# All external APIs that this application relies on, manually created
+KNOWN_REMOTE_APIS = []
+
+
+# def main():
+#     logger.info("%s service starting now: MTLS=%s, Token=%s" \
+#                 % (SERVICE_TYPE, MTLS, TOKEN))
+#     # Start Flask web server
+#     if MTLS and serviceCert:
+#         # SSL configuration for Flask. Order matters!
+#         cert = serviceCert.getServiceCertFileName()
+#         key = serviceCert.getServiceKeyFileName()
+#         if cert and key:
+            
+#             app.run(host=FLASK_HOST, port=FLASK_PORT, debug=FLASK_DEBUG, \
+#                     ssl_context=(cert,key))
+#         else:
+#             logger.error("Cannot serve API without SSL cert and key.")
+#             exit()
+#     else:
+#         app.run(host=FLASK_HOST, port=FLASK_PORT, debug=FLASK_DEBUG)
+
+
+
+# if __name__ == "__main__":
+#     main() 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# All APIs provided by this application, automatically generated
+LOCAL_APIS = allLinks(app)
+# All external APIs that this application relies on, manually created
+KNOWN_REMOTE_APIS = []
+
+
+# def main():
+#     logger.info("%s service starting now: MTLS=%s, Token=%s" \
+#                 % (SERVICE_TYPE, MTLS, TOKEN))
+#     # Start Flask web server
+#     if MTLS and serviceCert:
+#         # SSL configuration for Flask. Order matters!
+#         cert = serviceCert.getServiceCertFileName()
+#         key = serviceCert.getServiceKeyFileName()
+#         if cert and key:
+            
+#             app.run(host=FLASK_HOST, port=FLASK_PORT, debug=FLASK_DEBUG, \
+#                     ssl_context=(cert,key))
+#         else:
+#             logger.error("Cannot serve API without SSL cert and key.")
+#             exit()
+#     else:
+#         app.run(host=FLASK_HOST, port=FLASK_PORT, debug=FLASK_DEBUG)
+
+
+
+# if __name__ == "__main__":
+#     main() 
+
+
