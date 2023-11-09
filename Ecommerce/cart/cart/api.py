@@ -71,6 +71,8 @@ carts = {}
 def hello():
     return niceJson({"subresource_uris": allLinks(app)}, 200)
 
+"""
+
 @app.route("/carts/<user_id>/add_item", methods=['POST'])
 @jwt_conditional(requests)
 def addCartItem(user_id):
@@ -154,7 +156,7 @@ def checkoutCart(user_id):
             return jsonify({'message': 'Insufficient balance'}), 400
 
         # Deduct the total price from the user's account balance (replace with actual API call)
-        if not deduct_balance_from_account(user_id, total_price):
+        if not updateAccount(accNum, total_price):
             return jsonify({'message': 'Error deducting balance'}), 500
 
         # Clear the user's cart after successful checkout
@@ -165,20 +167,160 @@ def checkoutCart(user_id):
     except Exception as e:
         return jsonify({'message': 'Error during checkout', 'error': str(e)}), 500
 
-# Helper functions for interacting with the account service (replace with actual implementation)
-def get_account_balance_from_account_service(user_id):
-    # Implement logic to retrieve the user's account balance from the account service
-    # Return the balance or None if there was an error
-    # Example: account_balance = make_api_call_to_account_service("/accounts/balance", user_id)
-    # Replace make_api_call_to_account_service with your actual API call function
-    return None
+"""
+cart = {}
+@app.route("/cart/<product_id>", methods=['POST'])
+@jwt_conditional(requests)
+def add_to_cart(product_id):
+    try:
+        data = request.get_json()
+        quantity = data.get('quantity', 1)
 
-def deduct_balance_from_account(user_id, amount):
-    # Implement logic to deduct the specified amount from the user's account
-    # Return True if the balance was successfully deducted, False otherwise
-    # Example: result = make_api_call_to_account_service("/accounts/deduct", {"user_id": user_id, "amount": amount})
-    # Replace make_api_call_to_account_service with your actual API call function
-    return False
+        if product_id in cart:
+            cart[product_id] += quantity
+        else:
+            cart[product_id] = quantity
 
+        return jsonify({'message': 'Item added to cart successfully'}), 200
+    except Exception as e:
+        return jsonify({'message': 'Error adding item to cart', 'error': str(e)}), 500
+
+
+@app.route("/cart/<product_id>", methods=['DELETE'])
+@jwt_conditional(requests)
+def remove_from_cart(product_id):
+    try:
+        if product_id in cart:
+            del cart[product_id]
+            return jsonify({'message': 'Item removed from cart successfully'}), 200
+        else:
+            return jsonify({'message': 'Item not found in cart'}), 404
+    except Exception as e:
+        return jsonify({'message': 'Error removing item from cart', 'error': str(e)}), 500
+
+
+@app.route("/cart", methods=['GET'])
+@jwt_conditional(requests)
+def get_cart():
+    return jsonify(cart), 200
+
+
+@app.route("/cart/checkout", methods=['POST'])
+@jwt_conditional(requests)
+def checkout():
+    try:
+        # Calculate the total price of items in the cart
+        total_price = 0.0
+        for product_id, quantity in cart.items():
+            # Fetch product details from the external inventory service
+            product_details = fetch_product_details(product_id)
+            
+            if product_details:
+                product_price = product_details['price']
+                total_price += product_price * quantity
+            else:
+                return jsonify({'message': f'Product with ID {product_id} not found'}), 404
+
+        # Update the account balance using your existing updateAccount function
+        accNum = fetch_account_number(user_ID)
+        updated_balance = updateAccount(accNum, -total_price)
+
+        # Clear the cart after a successful checkout
+        cart.clear()
+
+        return jsonify({'message': 'Checkout successful', 'new_balance': updated_balance}), 200
+    except Exception as e:
+        return jsonify({'message': 'Error during checkout', 'error': str(e)}), 500
+    
+
+def fetch_account_number():
+    try:
+        # Construct the URL to request the account number from the account service
+        account_url = f"{ACCOUNTS_SERVICE_URL}getAccountNumber"
+
+        # Make a GET request to the account service's API
+        response = requests.get(account_url)
+
+        # Check the response status code
+        if response.status_code == 200:
+            # Successfully retrieved account number
+            account_data = response.json()
+            accNum = account_data.get('accNum')
+            return accNum
+        else:
+            # Handle other response status codes as needed
+            return None
+    except Exception as e:
+        return None
+
+
+def fetch_product_details(product_id):
+    try:
+        # Construct the URL to request the product details from the external inventory service
+        url = INVENTORY_SERVICE_URL + 'products/' + product_id
+
+        # Make a GET request to the external service's API
+        response = requests.get(url)
+
+        # Check the response status code
+        if response.status_code == 200:
+            return response.json()  # Assuming the response is in JSON format
+        elif response.status_code == 404:
+            return None  # Product not found in the external service
+        else:
+            return None  # Handle other status codes as needed
+    except Exception as e:
+        return None
+
+
+
+
+
+
+#updating the balance in teh account , sending accnum and amount 
+def updateAccount(accNum, amount):
+    try:
+        url = ACCOUNTS_SERVICE_URL + 'accounts/%s' % accNum
+        payload = {'amount':amount}
+        res = requests.post(url, json=payload)
+    except ConnectionError as e:
+        raise ServiceUnavailable("Accounts service connection error: %s."%e)
+
+    if res.status_code != codes.ok:
+        raise NotFound("Cannot update account %s, resp %s, status code %s" \
+                       % (accNum, res.text, res.status_code))
+    else:
+        return res.json()['balance']
+# All APIs provided by this application, automatically generated
+LOCAL_APIS = allLinks(app)
+# All external APIs that this application relies on, manually created
+KNOWN_REMOTE_APIS = [ACCOUNTS_SERVICE_URL + "accounts",
+                    INVENTORY_SERVICE_URL + "inventory"]
+
+
+"""
+def main():
+    logger.info("%s service starting now: MTLS=%s, Token=%s" % (SERVICE_TYPE, MTLS, TOKEN))
+    # Start Flask web server
+    if MTLS and serviceCert:
+        # SSL configuration for Flask. Order matters!
+        cert = serviceCert.getServiceCertFileName()
+        key = serviceCert.getServiceKeyFileName()
+        if cert and key:
+            app.run(host=FLASK_HOST, port=FLASK_PORT, debug=FLASK_DEBUG, ssl_context=(cert, key))
+        else:
+            logger.error("Cannot serve API without SSL cert and key.")
+            exit()
+    else:
+        app.run(host=FLASK_HOST, port=FLASK_PORT, debug=FLASK_DEBUG)
+
+"""
+
+
+
+# if __name__ == "__main__":
+#     main()   
 if __name__ == "__main__":
     app.run(debug=True)
+
+
