@@ -1,8 +1,15 @@
 import os
 import sys
 from functools import wraps
-
 from flask import Flask, request, abort
+# Replace this import
+from flask_sqlalchemy import SQLAlchemy
+from db_controller.models import Account
+
+
+
+
+
 
 from general import log, getEnvVar, isDocker, niceJson, allLinks
 from db_controller import db_create, db_migrate, dbCtrl
@@ -156,28 +163,27 @@ LOCAL_APIS = allLinks(app)
 KNOWN_REMOTE_APIS = []
 
 
-# def main():
-#     logger.info("%s service starting now: MTLS=%s, Token=%s" \
-#                 % (SERVICE_TYPE, MTLS, TOKEN))
-#     # Start Flask web server
-#     if MTLS and serviceCert:
-#         # SSL configuration for Flask. Order matters!
-#         cert = serviceCert.getServiceCertFileName()
-#         key = serviceCert.getServiceKeyFileName()
-#         if cert and key:
-            
-#             app.run(host=FLASK_HOST, port=FLASK_PORT, debug=FLASK_DEBUG, \
-#                     ssl_context=(cert,key))
-#         else:
-#             logger.error("Cannot serve API without SSL cert and key.")
-#             exit()
-#     else:
-#         app.run(host=FLASK_HOST, port=FLASK_PORT, debug=FLASK_DEBUG)
+def main():
+    """
+    logger.info("%s service starting now: MTLS=%s, Token=%s" % (SERVICE_TYPE, MTLS, TOKEN))
+    # Start Flask web server
+    if MTLS and serviceCert:
+        # SSL configuration for Flask. Order matters!
+        cert = serviceCert.getServiceCertFileName()
+        key = serviceCert.getServiceKeyFileName()
+        if cert and key:
+            app.run(host=FLASK_HOST, port=FLASK_PORT, debug=FLASK_DEBUG, ssl_context=(cert, key))
+        else:
+            logger.error("Cannot serve API without SSL cert and key.")
+            exit()
+    else:
+    """
+    app.run(host=FLASK_HOST, port=FLASK_PORT, debug=FLASK_DEBUG)
 
 
-
-# if __name__ == "__main__":
-#     main() 
+if __name__ == "__main__":
+     
+    main() 
 
 
 
