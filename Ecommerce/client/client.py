@@ -7,6 +7,7 @@ from threading import Barrier
 import random
 import requests
 
+
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -29,7 +30,7 @@ else:
     PROT = 'http'
 
 
-NUM_ORDER_PER_CLIENT = 100
+NUM_ORDER_PER_CLIENT = 1000
 
 class Simulation():
     def __init__(self, procNum):
@@ -76,6 +77,7 @@ class Simulation():
             else : 
                 exit()
             #add items to cart
+            print(customer)
 
             customer["user_cart"] = [] 
 
@@ -318,7 +320,7 @@ def main():
     for x in range(0,numProcesses):
         q = Queue()
         queueList.append(q)
-        p = Process(target=Simulation(x*2).runPaymentTest, args=(q,))
+        p = Process(target=Simulation(x*2).runTest, args=(q,))
         processList.append(p)
 
     startTime = datetime.datetime.now()
@@ -339,7 +341,7 @@ def main():
     #      % (NUM_PAYMENTS_PER_CLIENT*numProcesses, totalTime, operationsPerSec)
     operationsPerSec = float(NUM_ORDER_PER_CLIENT*numProcesses / secondsPassed)
     print ("Transactions per second (%d/%f): %f" \
-         % (NUM_ORDER_PER_CLIENT*numProcesses, secondsPassed, operationsPerSec)
+         % (NUM_ORDER_PER_CLIENT*numProcesses, secondsPassed, operationsPerSec))
 
     for p in processList:
         p.join()
@@ -349,4 +351,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
 

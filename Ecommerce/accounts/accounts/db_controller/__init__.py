@@ -2,10 +2,8 @@ from random import randint
 
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from db_controller.models import Account
 
-
-
+#from flask.ext.sqlalchemy import SQLAlchemy
 
 from sqlalchemy.engine import Engine
 from sqlalchemy import event
@@ -24,6 +22,7 @@ app.config.from_object('db_controller.db_config')
 db = SQLAlchemy(app)
 
 
+from .models import Account
 
 
 ACCOUNT_NUM_LENGTH = 10

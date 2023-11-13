@@ -9,7 +9,7 @@
 import imp
 from migrate.versioning import api
 
-from db_controller import db
+#from db_controller import db
 from db_controller.db_config import SQLALCHEMY_DATABASE_URI
 from db_controller.db_config import SQLALCHEMY_MIGRATE_REPO
 

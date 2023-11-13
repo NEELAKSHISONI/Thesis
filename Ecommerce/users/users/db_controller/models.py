@@ -1,11 +1,7 @@
 from db_controller import db
+Base = db.Model
 
-# The User class contains several fields, defined as class variables. 
-# Fields are created as instances of the db.Column class, which takes the field type as an 
-# argument, plus other optional arguments that allow us, for example, to indicate which fields are unique and indexed.
-# The __repr__ method tells Python how to print objects of this class. We will use this for debugging.
-
-class User(db.Model):
+class User(Base):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True)
     pwd = db.Column(db.String(120), index=True, unique=False)
@@ -30,11 +26,3 @@ class User(db.Model):
 
     def __repr__(self):
         return '<User %r>' % (self.username)
-
-
-
-
-
-
-
-

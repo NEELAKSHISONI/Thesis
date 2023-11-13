@@ -5,6 +5,11 @@ from flask import Flask, request, abort
 
 from general import log, getEnvVar, isDocker, niceJson, allLinks
 from db_controller import db_create, db_migrate, dbCtrl
+from db_controller.db_config import Config
+from flask_sqlalchemy import SQLAlchemy
+
+
+
 
 
 # Use the name of the current directory as a service type
@@ -39,6 +44,10 @@ else:
 
 
 app = Flask(__name__)
+from flask_migrate import Migrate
+# Assuming 'app' is your Flask app and 'db' is your SQLAlchemy database instance
+migrate = Migrate(app, db)
+
 
 
 

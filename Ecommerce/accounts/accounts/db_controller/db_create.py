@@ -1,7 +1,7 @@
 #!flask/bin/python
 import os.path
 from os import remove
-
+import os 
 from migrate.versioning import api
 
 from db_controller.db_config import SQLALCHEMY_DATABASE_URI
@@ -18,16 +18,25 @@ def isDBVolume():
 		# print "Volume %s is writable: %s" % (DATAVOL, res)
 	return res
 
+
+
+
+import os
+
 def isWritable(directory):
     try:
         filepath = os.path.join(directory, "test.txt")
-        f = open(filepath,"w")
+        f = open(filepath, "w")
         f.close()
-        remove(filepath)
+        os.remove(filepath)
         return True
     except Exception as e:
-        print "{}".format(e)
+        print("{}".format(e))
         return False
+
+
+
+
 
 def isDBfile():
 	return os.path.exists(SQLALCHEMY_DATABASE_URI_SHORT)

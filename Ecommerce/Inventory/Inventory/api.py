@@ -34,6 +34,8 @@ else:
 # Setup Flask
 # FLASK_DEBUG = getEnvVar('FLASK_DEBUG', False)
 # FLASK_HOST = '0.0.0.0'
+
+
 if isDocker():
     FLASK_PORT = 80
 else:
@@ -110,8 +112,9 @@ LOCAL_APIS = allLinks(app)
 # All external APIs that this application relies on, manually created
 KNOWN_REMOTE_APIS = []
 
-"""
+
 def main():
+    """
     logger.info("%s service starting now: MTLS=%s, Token=%s" % (SERVICE_TYPE, MTLS, TOKEN))
     # Start Flask web server
     if MTLS and serviceCert:
@@ -124,13 +127,16 @@ def main():
             logger.error("Cannot serve API without SSL cert and key.")
             exit()
     else:
-        app.run(host=FLASK_HOST, port=FLASK_PORT, debug=FLASK_DEBUG)
+    """
+    app.run(host=FLASK_HOST, port=FLASK_PORT, debug=FLASK_DEBUG)
 
-"""
+
 
 
 
 # if __name__ == "__main__":
 #     main()   
 if __name__ == "__main__":
+
+    
     app.run(debug=True)

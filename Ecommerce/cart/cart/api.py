@@ -1,4 +1,5 @@
 import os
+from flask import jsonify
 
 from flask import Flask, request, abort
 from requests import codes
@@ -67,9 +68,7 @@ def hello():
 
 carts = {}
 
-@app.route("/", methods=['GET'])
-def hello():
-    return niceJson({"subresource_uris": allLinks(app)}, 200)
+
 
 """
 
@@ -214,8 +213,12 @@ def checkout():
         for product_id, quantity in cart.items():
             # Fetch product details from the external inventory service
             product_details = fetch_product_details(product_id)
+            print(product_details)
+            print(f"Fetching details for product ID: {product_id}")
+            
             
             if product_details:
+                
                 product_price = product_details['price']
                 total_price += product_price * quantity
             else:
@@ -258,6 +261,9 @@ def fetch_product_details(product_id):
     try:
         # Construct the URL to request the product details from the external inventory service
         url = INVENTORY_SERVICE_URL + 'products/' + product_id
+        print(f"Fetching details for product ID: {product_id}")
+        print(f"URL: {url}")
+
 
         # Make a GET request to the external service's API
         response = requests.get(url)
