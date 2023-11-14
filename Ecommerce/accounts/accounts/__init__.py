@@ -17,9 +17,7 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
     cursor.execute("PRAGMA journal_mode = MEMORY")
     cursor.close()
 
-app = Flask(__name__)
-app.config.from_object('db_controller.db_config')
-db = SQLAlchemy(app)
+db = SQLAlchemy()
 
 
 from .models import Account

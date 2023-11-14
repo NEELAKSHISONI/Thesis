@@ -7,7 +7,7 @@ from migrate.versioning import api
 from db_config import SQLALCHEMY_DATABASE_URI
 from db_config import SQLALCHEMY_DATABASE_URI_SHORT, DATAVOL
 from db_config import SQLALCHEMY_MIGRATE_REPO
-from .import db , app
+from .import db 
 
 
 

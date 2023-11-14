@@ -6,6 +6,9 @@ from flask import Flask, request, abort
 
 from general import log, getEnvVar, isDocker, niceJson, allLinks
 from db_controller import db_create, db_migrate, dbCtrl
+from db_controller import db 
+app = Flask(__name__)
+db.init_app(app)
 
 
 # Use the name of the current directory as a service type
@@ -37,7 +40,7 @@ if isDocker():
 else:
     FLASK_PORT = 9082
 
-app = Flask(__name__)
+
 
 
 
