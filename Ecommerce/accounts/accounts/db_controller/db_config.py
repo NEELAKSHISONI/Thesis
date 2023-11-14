@@ -1,10 +1,17 @@
 import os.path
+import os
 
-DATAVOL = "/accountsvol"
-# Path to the DB file.
+
+
+
+
+# Make sure this is the correct absolute path to your 'accountsvol' directory
+DATAVOL = r'C:\Users\soni004\Desktop\Thesis\Ecommerce\accounts\accounts'
 SQLALCHEMY_DATABASE_URI_SHORT = os.path.join(DATAVOL, 'accounts.db')
-# SQLLite uri required by the Flask-SQLAlchemy extension.
 SQLALCHEMY_DATABASE_URI = 'sqlite:///' + SQLALCHEMY_DATABASE_URI_SHORT
+
+
+
 # Path to the SQLAlchemy-migrate file
 SQLALCHEMY_MIGRATE_REPO = os.path.join(DATAVOL, 'db_repository')
 # To turn off the Flask-SQLAlchemy event system and disable the

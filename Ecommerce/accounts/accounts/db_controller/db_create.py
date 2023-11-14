@@ -4,10 +4,14 @@ from os import remove
 import os 
 from migrate.versioning import api
 
-from db_controller.db_config import SQLALCHEMY_DATABASE_URI
-from db_controller.db_config import SQLALCHEMY_DATABASE_URI_SHORT, DATAVOL
-from db_controller.db_config import SQLALCHEMY_MIGRATE_REPO
-from db_controller import db
+from db_config import SQLALCHEMY_DATABASE_URI
+from db_config import SQLALCHEMY_DATABASE_URI_SHORT, DATAVOL
+from db_config import SQLALCHEMY_MIGRATE_REPO
+from .import db , app
+
+
+
+#from db_controller import db, app
 
 
 def isDBVolume():
@@ -19,9 +23,6 @@ def isDBVolume():
 	return res
 
 
-
-
-import os
 
 def isWritable(directory):
     try:
